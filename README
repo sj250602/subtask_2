@@ -1,0 +1,31 @@
+INSTRUCTION FOR RUNNING THE CODE
+
+IMPORTANT INFO: Make sure that your code(subtask_2.cpp),(Makefile),(Emptyframe.jpg)
+STEP 1: Open the terminal and go to the folder where your code file(subtask_2.cpp (in my case)) is placed and open the folder in terminal.
+
+STEP 2: After that we compile our code for compiling just use the command : "make compile"(Remember that the file makefile also placed the same folder whch containg the subtask_2.cpp).
+
+ALTERNATIVE STETP 2: For compiling you use the command : "g++ subtask_2.cpp -o output -std=c++11 `pkg-config --cflags --libs opencv`".
+
+STEP 3: After compiling we run our code for running just use the command : "make run".
+
+ALTERNATIVE STEP 3: For running the code you use the command : "./output".
+
+STEP 4: After calling "make run" command just give the path of the video that you wanted to find the traffic density and press enter key.
+
+STEP 5: Give the path of the video : "traffic_video.mp4" and press enter key.
+
+STEP 6: Give the path of the empty frame : "empty.jpg" and press enter key.
+
+STEP 7: After give the path of empty frame give the path where you want to store the queue and dynamic/moving density and use the command: "graph_coor.csv".
+
+STEP 8: After this your video is processed wiat for some time depend on the video length after the process is complete you see the command on the terminal that your process is complete.
+
+STEP 9: Use the code graph.py and plot the curve(make sure that you install matplotlib library of python)
+
+STEP 10: Give the path of the file that you give in STEP 5.
+
+STEP 11: You saw your traffic density curve for movinf and queue density.
+
+ 
+
