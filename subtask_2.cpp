@@ -1,12 +1,31 @@
 #include <opencv2/opencv.hpp>
 #include <iostream>
+#include <bits/stdc++.h>
 
 using namespace cv;
 using namespace std;
 
 vector<Point2f> pts_src;
 vector<Point2f> pts_dst;
+vector<double> ans_vec;
 Rect box;
+
+void getcontoursarea(Mat image,Mat image2,Mat image3){
+	int queue = 0,dynamic = 0,total = 0; 
+	for (int i = 0; i <image.size().height; i++) {
+		for (int j = 0; j<image.size().width; j++) {
+			total += 1;
+			if (abs(image.at<uchar>(i, j)-image2.at<uchar>(i,j))>22) {
+				queue += 1;
+			}
+			if (abs(image.at<uchar>(i, j)-image3.at<uchar>(i,j))>10) {
+				dynamic += 1;
+			}
+		}
+	}
+	ans_vec.push_back((double) queue / (double)(image.size().height*image.size().width));
+	ans_vec.push_back((double) dynamic / (double)(image.size().height*image.size().width));
+}
 
 
 Mat crop_frame(Mat im_src)
@@ -14,10 +33,7 @@ Mat crop_frame(Mat im_src)
 	Mat im_out; 
 	Mat h = findHomography(pts_src, pts_dst);
 	warpPerspective(im_src, im_out, h, im_src.size());
-	String str_out_save = "Projected Frame.jpg";
-	bool check = imwrite(str_out_save,im_out);
-	Mat read_proj = imread(str_out_save);
-	Mat crop(read_proj,box);
+	Mat crop = im_out(box);
     	return crop;
 }
 
@@ -38,10 +54,18 @@ int main(int argc, char* argv[])
 	box.height=(1000);
 	box.x=(430);
 	box.y=(32);
-	//open the video file for reading
-	VideoCapture cap("trafficvideo.mp4"); 
 	
-	Mat emptyframe = imread("empty.jpg");
+	
+	String str;
+	cout<<"Enter the path of video:";
+	cin>>str;
+	//open the video file for reading
+	VideoCapture cap(str); 
+	
+	String str1;
+	cout<<"Enter the path of empty frame:";
+	cin>>str1;
+	Mat emptyframe = imread(str1);
 	
 	// if not success, exit program
 	if (cap.isOpened() == false)  
@@ -59,34 +83,67 @@ int main(int argc, char* argv[])
 	cout <<"No of frames="<< frames << "\n";
  	
  	String window_name = "Traffic_Density";
+ 	
+ 	String store_data;
+ 	cout<<"Enter the path for stroe the density data:";
+ 	cin>>store_data;
+ 	ofstream store_coor;
+	store_coor.open(store_data);
+ 	//namedWindow(window_name, WINDOW_NORMAL); //create a window
+ 	
+  	Mat prev_image = emptyframe;
 
- 	namedWindow(window_name, WINDOW_NORMAL); //create a window
-	Mat crop_emp = crop_frame(emptyframe);
+	int frame_num = 0;
+	int fps_3 = -1;
 	
-	while (true)
+	while (fps_3<frames)
 	{
-		Mat curr_frame
-		bool bSuccess = cap.read(curr_frame); // read a new frame from video
-		//Breaking the while loop at the end of the video
-		if (bSuccess == false)
-  		{
-   			cout << "Found the end of the video" << endl;
-   			break;
-  		}
-  		
-  		Mat curr_crop_frm = crop_frame(curr_frame);
-
+		fps_3++;
+		Mat curr_frame,gray_prev,gray_emp,crop_emp,crop_curr,crop_prev,gray_curr;
+		bool bSuccess = cap.read(curr_frame);
+		if(fps_3%3==0){
+			// read a new frame from video
+			frame_num++;
+			//Breaking the while loop at the end of the video
+			if (bSuccess == false)
+  			{
+   				cout << "Found the end of the video" << endl;
+   				break;
+  			}
+  			
+  			cvtColor(emptyframe,gray_emp,COLOR_BGR2GRAY);
+  			crop_emp = crop_frame(gray_emp);
+  			
+  			cvtColor (prev_image , gray_prev, COLOR_BGR2GRAY);
+  			crop_prev = crop_frame(gray_prev);
+  			
+  			cvtColor ( curr_frame, gray_curr, COLOR_BGR2GRAY);
+			crop_curr = crop_frame(gray_curr);
+	
 		
-  		//wait for for 10 ms until any key is pressed.  
-  		//If the 'Esc' key is pressed, break the while loop.
-  		//If the any other key is pressed, continue the loop 
-  		//If any key is not pressed withing 10 ms, continue the loop
-  		if (waitKey(40) == 27)
-  		{
-   			cout << "Esc key is pressed by user. Stopping the video" << endl;
-   			break;
-  		}
- 	}
+			getcontoursarea(crop_curr,crop_emp,crop_prev);
+			
+			store_coor<< frame_num <<","<< ans_vec[0] <<"," << ans_vec[1]<< endl;
+		
+			ans_vec.clear();
+		
+			prev_image =   curr_frame;
+		
+			
+	  		//wait for for 10 ms until any key is pressed.  
+	  		//If the 'Esc' key is pressed, break the while loop.
+	  		//If the any other key is pressed, continue the loop 
+	  		//If any key is not pressed withing 10 ms, continue the loop
+	  		if (waitKey(40) == 27)
+	  		{
+	   			cout << "Esc key is pressed by user. Stopping the video" << endl;
+	   			break;
+	  		}
+	 	}
+	 }
+	 
+	cout<<"Your video is processed successfully now you plot the curve\n"; 
+ 	store_coor.close();
  
  	return 0;
 
